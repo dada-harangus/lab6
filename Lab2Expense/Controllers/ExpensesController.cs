@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Lab2Expense.Models;
+using Lab2Expense.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,10 @@ namespace Lab2Expense.Controllers
     [ApiController]
     public class ExpensesController : ControllerBase
     {
-        private ExpensesDbContext context;
-        public ExpensesController(ExpensesDbContext context)
+        private IExpenseService expenseService;
+        public ExpensesController(IExpenseService expenseService)
         {
-            this.context = context;
+            this.expenseService = expenseService;
         }
         // GET: api/Expenses
         /// <summary>
@@ -29,24 +30,7 @@ namespace Lab2Expense.Controllers
         [HttpGet]
         public IEnumerable<Expense> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to,[FromQuery]ExpenseType? type) 
         {
-            IQueryable<Expense> result = context.Expenses.Include(f=>f.Comments);
-            if (from == null && to == null&&type==null)
-            {
-                return result;
-            }
-            if (from != null)
-            {
-                result = result.Where(f => f.Date >= from);
-            }
-            if (to != null)
-            {
-                result = result.Where(f => f.Date <= to);
-            }
-            if (type != null)
-            {
-                result = result.Where(f => f.ExpenseType == type);
-            }
-            return result;
+            return expenseService.GetAll(from, to, type);
 
         }
 
@@ -59,15 +43,14 @@ namespace Lab2Expense.Controllers
         [HttpGet("{id}", Name = "Get")]
         public IActionResult Get(int id)
         {
-            var existing = context.Expenses
-                .Include(f => f.Comments)
-                .FirstOrDefault(expense => expense.Id == id);
-            if (existing == null)
+            var found = expenseService.GetById(id);
+           
+            if (found == null)
             {
                 return NotFound();
             }
 
-            return Ok(existing);
+            return Ok(found);
         }
 
         // POST: api/Expenses
@@ -93,8 +76,7 @@ namespace Lab2Expense.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public void Post([FromBody] Expense expense )
         {
-            context.Expenses.Add(expense);
-            context.SaveChanges();
+            expenseService.Create(expense);
         }
 
         // PUT: api/Expenses/5
@@ -107,17 +89,8 @@ namespace Lab2Expense.Controllers
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] Expense expense)
         {
-            var existing = context.Expenses.AsNoTracking().FirstOrDefault(f => f.Id == id);
-            if (existing == null)
-            {
-                context.Expenses.Add(expense);
-                context.SaveChanges();
-                return Ok(expense);
-            }
-            expense.Id = id;
-            context.Expenses.Update(expense);
-            context.SaveChanges();
-            return Ok(expense);
+           var result= expenseService.Upsert(id, expense);
+            return Ok(result);
         }
 
         // DELETE: api/ApiWithActions/5
@@ -129,14 +102,13 @@ namespace Lab2Expense.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var existing = context.Expenses.FirstOrDefault(expense => expense.Id == id);
+            var existing = expenseService.Delete(id);
             if (existing == null)
             {
                 return NotFound();
             }
-            context.Expenses.Remove(existing);
-            context.SaveChanges();
-            return Ok();
+          
+            return Ok(existing);
         }
     }
 }
