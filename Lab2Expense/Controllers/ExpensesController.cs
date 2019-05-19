@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lab2Expense.Models;
 using Lab2Expense.Services;
+using Lab2Expense.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +29,7 @@ namespace Lab2Expense.Controllers
         /// <param name="type">Optional filter by expense type</param>
         /// <returns>A list of Expense objects</returns>
         [HttpGet]
-        public IEnumerable<Expense> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to,[FromQuery]ExpenseType? type) 
+        public IEnumerable<ExpenseGetModel> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]ExpenseType? type)
         {
             return expenseService.GetAll(from, to, type);
 
@@ -39,12 +40,12 @@ namespace Lab2Expense.Controllers
         /// Get the Expense that has the id requested
         /// </summary>
         /// <param name="id">The id of the Expense</param>
-        /// <returns>The flower with the given Id</returns>
-        [HttpGet("{id}", Name = "Get")]
+        /// <returns>The expense with the given Id</returns>
+        [HttpGet("{id}", Name = "GetExpense")]
         public IActionResult Get(int id)
         {
             var found = expenseService.GetById(id);
-           
+
             if (found == null)
             {
                 return NotFound();
@@ -74,7 +75,7 @@ namespace Lab2Expense.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public void Post([FromBody] Expense expense )
+        public void Post([FromBody] ExpensePostModel expense)
         {
             expenseService.Create(expense);
         }
@@ -83,13 +84,27 @@ namespace Lab2Expense.Controllers
         /// <summary>
         /// Update the Expense with the given id
         /// </summary>
+        ///  /// <remarks>
+        /// Sample request:
+        /// PUT/expenses
+        /// {
+        ///   "description": "cheeseburger2",
+        ///   "sum": 10,
+        /// "location": "fastfood",
+        ///"date": "2019-05-09T12:30:00",
+        /// "currency": "EUR",
+        /// "expenseType": 5
+        /// }
+        /// </remarks>
         /// <param name="id">The id of the expense we want to update</param>
         /// <param name="expense">The Expense that contains the new data</param>
         /// <returns>An Expense object</returns>
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult Put(int id, [FromBody] Expense expense)
         {
-           var result= expenseService.Upsert(id, expense);
+            var result = expenseService.Upsert(id, expense);
             return Ok(result);
         }
 
@@ -100,6 +115,8 @@ namespace Lab2Expense.Controllers
         /// <param name="id">The id of the expense we want to delete</param>
         /// <returns>an Expense object</returns>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult Delete(int id)
         {
             var existing = expenseService.Delete(id);
@@ -107,7 +124,7 @@ namespace Lab2Expense.Controllers
             {
                 return NotFound();
             }
-          
+
             return Ok(existing);
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Lab2Expense.Models;
+using Lab2Expense.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -7,10 +8,11 @@ using System.Threading.Tasks;
 
 namespace Lab2Expense.Services
 {
-    public interface IExpenseService {
-        IEnumerable<Expense> GetAll(DateTime? from = null, DateTime? to = null,ExpenseType? type=null);
+    public interface IExpenseService
+    {
+        IEnumerable<ExpenseGetModel> GetAll(DateTime? from = null, DateTime? to = null, ExpenseType? type = null);
         Expense GetById(int id);
-        Expense Create(Expense expense);
+        Expense Create(ExpensePostModel expense);
         Expense Upsert(int id, Expense expense);
         Expense Delete(int id);
 
@@ -24,18 +26,21 @@ namespace Lab2Expense.Services
         }
 
 
-        public Expense Create(Expense expense)
+        public Expense Create(ExpensePostModel expense)
         {
-            context.Expenses.Add(expense);
+            Expense toAdd = ExpensePostModel.ToExpense(expense);
+            context.Expenses.Add(toAdd);
             context.SaveChanges();
-            return expense;
+            return toAdd;
 
 
         }
 
         public Expense Delete(int id)
         {
-            var existing = context.Expenses.FirstOrDefault(expense => expense.Id == id);
+            var existing = context.Expenses
+                .Include(f=>f.Comments)
+                .FirstOrDefault(expense => expense.Id == id);
             if (existing == null)
             {
                 return null;
@@ -45,13 +50,13 @@ namespace Lab2Expense.Services
             return existing;
         }
 
-        public IEnumerable<Expense> GetAll(DateTime? from = null, DateTime? to = null, ExpenseType? type = null)
+        public IEnumerable<ExpenseGetModel> GetAll(DateTime? from = null, DateTime? to = null, ExpenseType? type = null)
         {
 
             IQueryable<Expense> result = context.Expenses.Include(f => f.Comments);
             if (from == null && to == null && type == null)
             {
-                return result;
+                return result.Select(f => ExpenseGetModel.FromExpense(f));
             }
             if (from != null)
             {
@@ -65,13 +70,13 @@ namespace Lab2Expense.Services
             {
                 result = result.Where(f => f.ExpenseType == type);
             }
-            return result;
+            return result.Select(f => ExpenseGetModel.FromExpense(f)); ;
         }
 
         public Expense GetById(int id)
         {
             return context.Expenses
-                .Include(e=>e.Comments)
+                .Include(e => e.Comments)
                 .FirstOrDefault(e => e.Id == id);
         }
 
@@ -80,7 +85,8 @@ namespace Lab2Expense.Services
             var existing = context.Expenses.AsNoTracking().FirstOrDefault(f => f.Id == id);
             if (existing == null)
             {
-                context.Expenses.Add(expense);
+                context.
+                    Expenses.Add(expense);
                 context.SaveChanges();
                 return expense;
             }
