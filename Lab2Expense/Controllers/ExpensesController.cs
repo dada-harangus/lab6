@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using Lab2Expense.Models;
 using Lab2Expense.Services;
 using Lab2Expense.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lab2Expense.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ExpensesController : ControllerBase
@@ -28,10 +30,12 @@ namespace Lab2Expense.Controllers
         /// <param name="to">Optional,filter by maximim DatePicked</param>
         /// <param name="type">Optional filter by expense type</param>
         /// <returns>A list of Expense objects</returns>
+        [AllowAnonymous]
         [HttpGet]
-        public IEnumerable<ExpenseGetModel> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]ExpenseType? type)
+        public PaginatedList<ExpenseGetModel> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]ExpenseType? type, [FromQuery]int page = 1)
         {
-            return expenseService.GetAll(from, to, type);
+            page = Math.Max(page, 1);
+            return expenseService.GetAll(page, from, to, type);
 
         }
 
