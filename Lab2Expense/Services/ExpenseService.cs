@@ -10,9 +10,9 @@ namespace Lab2Expense.Services
 {
     public interface IExpenseService
     {
-       PaginatedList<ExpenseGetModel> GetAll(int page,DateTime? from = null, DateTime? to = null, ExpenseType? type = null);
+        PaginatedList<ExpenseGetModel> GetAll(int page, DateTime? from = null, DateTime? to = null, ExpenseType? type = null);
         Expense GetById(int id);
-        Expense Create(ExpensePostModel expense);
+        Expense Create(ExpensePostModel expense, User addedBy);
         Expense Upsert(int id, Expense expense);
         Expense Delete(int id);
 
@@ -26,9 +26,11 @@ namespace Lab2Expense.Services
         }
 
 
-        public Expense Create(ExpensePostModel expense)
+        public Expense Create(ExpensePostModel expense, User addedBy)
         {
             Expense toAdd = ExpensePostModel.ToExpense(expense);
+
+            toAdd.Owner = addedBy;
             context.Expenses.Add(toAdd);
             context.SaveChanges();
             return toAdd;
@@ -50,7 +52,7 @@ namespace Lab2Expense.Services
             return existing;
         }
 
-       
+
 
 
 

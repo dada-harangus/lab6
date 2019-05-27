@@ -4,14 +4,16 @@ using Lab2Expense.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Lab2Expense.Migrations
 {
     [DbContext(typeof(ExpensesDbContext))]
-    partial class ExpensesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190526160958_addedExpensesOwner")]
+    partial class addedExpensesOwner
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,8 +85,6 @@ namespace Lab2Expense.Migrations
 
                     b.Property<string>("Password");
 
-                    b.Property<int>("UserRole");
-
                     b.Property<string>("Username");
 
                     b.HasKey("Id");
@@ -98,10 +98,9 @@ namespace Lab2Expense.Migrations
 
             modelBuilder.Entity("Lab2Expense.Models.Comment", b =>
                 {
-                    b.HasOne("Lab2Expense.Models.Expense", "Expense")
+                    b.HasOne("Lab2Expense.Models.Expense")
                         .WithMany("Comments")
-                        .HasForeignKey("ExpenseId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("ExpenseId");
 
                     b.HasOne("Lab2Expense.Models.User", "Owner")
                         .WithMany()

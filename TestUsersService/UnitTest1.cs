@@ -74,7 +74,7 @@ namespace Tests
 
                 var resultAuth = usersService.Authenticate(auth.Username, auth.Password);
 
-                Assert.IsNotNull(result.Token);
+                Assert.IsNotNull(resultAuth.Token);
 
 
             }

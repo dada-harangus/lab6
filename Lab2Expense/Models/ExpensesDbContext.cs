@@ -17,6 +17,10 @@ namespace Lab2Expense.Models
             builder.Entity<User>(entity => {
                 entity.HasIndex(u => u.Username).IsUnique();
             });
+            builder.Entity<Comment>()
+                .HasOne(f => f.Expense)
+                .WithMany(c => c.Comments)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
         public DbSet<Expense> Expenses { get; set; }

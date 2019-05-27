@@ -12,15 +12,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lab2Expense.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Regular")]
     [Route("api/[controller]")]
     [ApiController]
     public class ExpensesController : ControllerBase
     {
         private IExpenseService expenseService;
-        public ExpensesController(IExpenseService expenseService)
+        private IUsersService usersService;
+        public ExpensesController(IExpenseService expenseService, IUsersService usersService)
         {
             this.expenseService = expenseService;
+            this.usersService = usersService;
         }
         // GET: api/Expenses
         /// <summary>
@@ -81,7 +83,8 @@ namespace Lab2Expense.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public void Post([FromBody] ExpensePostModel expense)
         {
-            expenseService.Create(expense);
+            User addedBy = usersService.GetCurrentUser(HttpContext);
+            expenseService.Create(expense,addedBy);
         }
 
         // PUT: api/Expenses/5

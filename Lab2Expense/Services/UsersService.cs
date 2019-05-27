@@ -1,5 +1,7 @@
 ﻿using Lab2Expense.Models;
 using Lab2Expense.ViewModels;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -17,7 +19,12 @@ namespace Lab2Expense.Services
     {
         UserGetModel Authenticate(string username, string password);
         UserGetModel Register(RegisterPostModel registerInfo);
+        User GetCurrentUser(HttpContext httpContext);
         IEnumerable<UserGetModel> GetAll();
+        User Delete(int id);
+        User Upsert(int id, User user);
+        UserGetModelWithRole ChangeRole(int id, string Role);
+
     }
 
     public class UsersService : IUsersService
@@ -48,7 +55,8 @@ namespace Lab2Expense.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, user.Username.ToString())
+                    new Claim(ClaimTypes.Name, user.Username.ToString()),
+                    new Claim(ClaimTypes.Role, user.UserRole.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -98,10 +106,20 @@ namespace Lab2Expense.Services
                 LastName = registerInfo.LastName,
                 FirstName = registerInfo.FirstName,
                 Password = ComputeSha256Hash(registerInfo.Password),
-                Username = registerInfo.Username
+                Username = registerInfo.Username,
+                UserRole = UserRole.Regular
             });
             context.SaveChanges();
             return Authenticate(registerInfo.Username, registerInfo.Password);
+        }
+
+
+        public User GetCurrentUser(HttpContext httpContext)
+        {
+            string username = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
+            //string accountType = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.AuthenticationMethod).Value;
+            //return _context.Users.FirstOrDefault(u => u.Username == username && u.AccountType.ToString() == accountType);
+            return context.Users.FirstOrDefault(u => u.Username == username);
         }
 
         public IEnumerable<UserGetModel> GetAll()
@@ -115,5 +133,54 @@ namespace Lab2Expense.Services
                 Token = null
             });
         }
+        public UserGetModelWithRole ChangeRole(int id, string Role)
+        {
+            var user = context.Users.Find(id);
+            if (Role == "admin")
+            {
+                user.UserRole = Models.UserRole.Admin;
+            }
+            if (Role == "manager")
+            {
+                user.UserRole = Models.UserRole.UserManager;
+            }
+
+            return UserGetModelWithRole.FromUser(user);
+
+        }
+        public User Delete(int id)
+        {
+            var existing = context.Users
+            .FirstOrDefault(user => user.Id == id);
+            if (existing == null)
+            {
+                return null;
+            }
+            context.Users.Remove(existing);
+            context.SaveChanges();
+            return existing;
+        }
+
+        public User Upsert(int id, User user)
+        {
+            var existing = context.Users.AsNoTracking().FirstOrDefault(f => f.Id == id);
+            if (existing == null)
+            {
+                context.
+                    Users.Add(user);
+                context.SaveChanges();
+                return user;
+            }
+            user.Id = id;
+            context.Users.Update(user);
+            context.SaveChanges();
+            return user;
+        }
+
+
+
+
     }
+
 }
+

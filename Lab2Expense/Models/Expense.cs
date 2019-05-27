@@ -21,5 +21,6 @@ namespace Lab2Expense.Models
         [EnumDataType(typeof(ExpenseType))]
         public ExpenseType ExpenseType { get; set; }
         public List<Comment> Comments { get; set; }
+        public User Owner { get; set; }
     }
 }

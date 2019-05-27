@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Lab2Expense.Models;
 using Lab2Expense.Services;
 using Lab2Expense.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Lab2Expense.Controllers
 {
     // https://jasonwatmore.com/post/2018/08/14/aspnet-core-21-jwt-authentication-tutorial-with-example-api
-    [Authorize]
+    [Authorize(Roles = "Admin, UserManager")]
     //[Route("api/[controller]/[action]")]
     [Route("api/[controller]")]
     [ApiController]
@@ -55,5 +56,72 @@ namespace Lab2Expense.Controllers
             var users = _userService.GetAll();
             return Ok(users);
         }
+
+        // PUT: api/Users/5
+        /// <summary>
+        /// Update the User with the given id
+        /// </summary>
+        ///  /// <remarks>
+        /// Sample request:
+        /// PUT/users
+        /// {
+        ///   "first": "cheeseburger2",
+        ///   "sum": 10,
+        /// "location": "fastfood",
+        ///"date": "2019-05-09T12:30:00",
+        /// "currency": "EUR",
+        /// "expenseType": 5
+        /// }
+        /// </remarks>
+        /// <param name="id">The id of the expense we want to update</param>
+        /// <param name="user">The User that contains the new data</param>
+        /// <returns>An User object</returns>
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult Put(int id, [FromBody] User user)
+        {
+            var result = _userService.Upsert(id, user);
+            return Ok(result);
+        }
+
+        // DELETE: api/ApiWithActions/5
+        /// <summary>
+        /// Delete the User with the given id
+        /// </summary>
+        /// <param name="id">The id of the user we want to delete</param>
+        /// <returns>an User object</returns>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult Delete(int id)
+        {
+            var existing = _userService.Delete(id);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(existing);
+        }
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult ChangeRole(int id, [FromBody] string Role)
+        {
+            if (User.IsInRole("UserManager"))
+            {
+                return NoContent();
+            }
+            var existing = _userService.ChangeRole(id, Role);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(existing);
+
+        }
+
     }
 }
