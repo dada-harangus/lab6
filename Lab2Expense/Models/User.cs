@@ -23,5 +23,7 @@ namespace Lab2Expense.Models
         public string Password { get; set; }
         [EnumDataType(typeof(UserRole))]
         public UserRole UserRole { get; set; }
+        public bool isRemoved { get; set; }
+        public DateTime DateAdded { get; set; }
     }
 }

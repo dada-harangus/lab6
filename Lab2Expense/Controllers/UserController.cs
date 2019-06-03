@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Lab2Expense.Models;
 using Lab2Expense.Services;
 using Lab2Expense.ViewModels;
@@ -81,7 +82,9 @@ namespace Lab2Expense.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult Put(int id, [FromBody] User user)
         {
-            var result = _userService.Upsert(id, user);
+
+            var userCurrent = _userService.GetCurrentUser(HttpContext);
+            var result = _userService.Upsert(id, user, userCurrent);
             return Ok(result);
         }
 
@@ -104,24 +107,25 @@ namespace Lab2Expense.Controllers
 
             return Ok(existing);
         }
-        [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult ChangeRole(int id, [FromBody] string Role)
-        {
-            if (User.IsInRole("UserManager"))
-            {
-                return NoContent();
-            }
-            var existing = _userService.ChangeRole(id, Role);
-            if (existing == null)
-            {
-                return NotFound();
-            }
+        //[HttpPut]
+        //[HttpPost]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
+        //public IActionResult ChangeRole([FromQuery]int id, [FromBody] string Role)
+        //{
+        //    if (User.IsInRole("UserManager"))
+        //    {
+        //        return NoContent();
+        //    }
+        //    var existing = _userService.ChangeRole(id, Role);
+        //    if (existing == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return Ok(existing);
+        //    return Ok(existing);
 
-        }
+        //}
 
     }
 }

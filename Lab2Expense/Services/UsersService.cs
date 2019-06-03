@@ -11,6 +11,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Web;
 using System.Threading.Tasks;
 
 namespace Lab2Expense.Services
@@ -20,10 +21,10 @@ namespace Lab2Expense.Services
         UserGetModel Authenticate(string username, string password);
         UserGetModel Register(RegisterPostModel registerInfo);
         User GetCurrentUser(HttpContext httpContext);
-        IEnumerable<UserGetModel> GetAll();
+        IEnumerable<UserGetModelWithRole> GetAll();
         User Delete(int id);
-        User Upsert(int id, User user);
-        UserGetModelWithRole ChangeRole(int id, string Role);
+        User Upsert(int id, User user, User userCurrent);
+
 
     }
 
@@ -70,6 +71,7 @@ namespace Lab2Expense.Services
                 Token = tokenHandler.WriteToken(token)
             };
             // remove password before returning
+
             return result;
         }
 
@@ -107,7 +109,11 @@ namespace Lab2Expense.Services
                 FirstName = registerInfo.FirstName,
                 Password = ComputeSha256Hash(registerInfo.Password),
                 Username = registerInfo.Username,
-                UserRole = UserRole.Regular
+                UserRole = UserRole.Regular,
+                isRemoved = false,
+                DateAdded = DateTime.Now
+
+
             });
             context.SaveChanges();
             return Authenticate(registerInfo.Username, registerInfo.Password);
@@ -122,32 +128,32 @@ namespace Lab2Expense.Services
             return context.Users.FirstOrDefault(u => u.Username == username);
         }
 
-        public IEnumerable<UserGetModel> GetAll()
+        public IEnumerable<UserGetModelWithRole> GetAll()
         {
             // return users without passwords
-            return context.Users.Select(user => new UserGetModel
+            return context.Users.Select(user => new UserGetModelWithRole
             {
                 Id = user.Id,
                 Email = user.Email,
                 Username = user.Username,
-                Token = null
+                UserRole= user.UserRole
             });
         }
-        public UserGetModelWithRole ChangeRole(int id, string Role)
-        {
-            var user = context.Users.Find(id);
-            if (Role == "admin")
-            {
-                user.UserRole = Models.UserRole.Admin;
-            }
-            if (Role == "manager")
-            {
-                user.UserRole = Models.UserRole.UserManager;
-            }
+        //public UserGetModelWithRole ChangeRole(int id, string Role)
+        //{
+        //    var user = context.Users.Find(id);
+        //    if (Role == "admin")
+        //    {
+        //        user.UserRole = Models.UserRole.Admin;
+        //    }
+        //    if (Role == "manager")
+        //    {
+        //        user.UserRole = Models.UserRole.UserManager;
+        //    }
 
-            return UserGetModelWithRole.FromUser(user);
+        //    return UserGetModelWithRole.FromUser(user);
 
-        }
+        //}
         public User Delete(int id)
         {
             var existing = context.Users
@@ -156,12 +162,13 @@ namespace Lab2Expense.Services
             {
                 return null;
             }
-            context.Users.Remove(existing);
+            existing.isRemoved = true;
+            context.Update(existing);
             context.SaveChanges();
             return existing;
         }
 
-        public User Upsert(int id, User user)
+        public User Upsert(int id, User user, User userCurrent)
         {
             var existing = context.Users.AsNoTracking().FirstOrDefault(f => f.Id == id);
             if (existing == null)
@@ -171,10 +178,21 @@ namespace Lab2Expense.Services
                 context.SaveChanges();
                 return user;
             }
+            DateTime dateCurrent = DateTime.Now;
+            TimeSpan diferenta = dateCurrent.Subtract(userCurrent.DateAdded);
+
             user.Id = id;
+            if ((userCurrent.UserRole == Models.UserRole.Admin || diferenta.Days > 190 ) && existing.UserRole !=Models.UserRole.Admin)
+            {
+                context.Users.Update(user);
+                context.SaveChanges();
+                return user;
+            }
+            user.UserRole = existing.UserRole;
             context.Users.Update(user);
             context.SaveChanges();
             return user;
+
         }
 
 
