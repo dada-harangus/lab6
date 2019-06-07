@@ -1,8 +1,10 @@
 using Lab2Expense.Models;
 using Lab2Expense.Services;
+using Lab2Expense.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
+using System.Collections.Generic;
 
 namespace Tests
 {
@@ -77,6 +79,54 @@ namespace Tests
                 Assert.IsNotNull(resultAuth.Token);
 
 
+            }
+        }
+        [Test]
+        public void ValidGetAll()
+        {
+            var options = new DbContextOptionsBuilder<ExpensesDbContext>()
+              .UseInMemoryDatabase(databaseName: nameof(ValidGetAll))// "ValidRegisterShouldCreateANewUser")
+              .Options;
+
+            using (var context = new ExpensesDbContext(options))
+            {
+                var usersService = new UsersService(context, config);
+                var added = new Lab2Expense.ViewModels.RegisterPostModel
+                {
+                    Email = "a@a.b",
+                    FirstName = "fdsfsdfs",
+                    LastName = "fdsfs",
+                    Password = "1234567",
+                    Username = "test_username"
+                };
+                var result = usersService.GetAll();
+                Assert.IsNotNull(result);
+
+            }
+        }
+
+        [Test]
+        public void ValidDeleteIsRemovedShoulBeTrue()
+        {
+            var options = new DbContextOptionsBuilder<ExpensesDbContext>()
+              .UseInMemoryDatabase(databaseName: nameof(ValidDeleteIsRemovedShoulBeTrue))// "ValidRegisterShouldCreateANewUser")
+              .Options;
+
+            using (var context = new ExpensesDbContext(options))
+            {
+                var usersService = new UsersService(context, config);
+                var added = new Lab2Expense.ViewModels.RegisterPostModel
+                {
+                    Email = "a@a.b",
+                    FirstName = "fdsfsdfs",
+                    LastName = "fdsfs",
+                    Password = "1234567",
+                    Username = "test_username"
+                };
+                var resultAdded = usersService.Register(added);
+                var resultDelete = usersService.Delete(resultAdded.Id);
+
+                Assert.AreEqual(true, resultDelete.isRemoved);
             }
         }
     }
