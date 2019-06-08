@@ -4,14 +4,16 @@ using Lab2Expense.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Lab2Expense.Migrations
 {
     [DbContext(typeof(ExpensesDbContext))]
-    partial class ExpensesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190608141241_addedUserUserRole")]
+    partial class addedUserUserRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,11 +110,7 @@ namespace Lab2Expense.Migrations
 
                     b.Property<string>("Name");
 
-                    b.Property<int?>("OwnerId");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("OwnerId");
 
                     b.ToTable("UserRole");
                 });
@@ -153,13 +151,6 @@ namespace Lab2Expense.Migrations
                 });
 
             modelBuilder.Entity("Lab2Expense.Models.Expense", b =>
-                {
-                    b.HasOne("Lab2Expense.Models.User", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId");
-                });
-
-            modelBuilder.Entity("Lab2Expense.Models.UserRole", b =>
                 {
                     b.HasOne("Lab2Expense.Models.User", "Owner")
                         .WithMany()

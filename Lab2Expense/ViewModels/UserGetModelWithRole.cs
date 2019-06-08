@@ -11,7 +11,7 @@ namespace Lab2Expense.ViewModels
         public int Id { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
-        public UserRole UserRole { get; set; }
+
 
         public static UserGetModelWithRole FromUser(User user)
         {
@@ -20,7 +20,7 @@ namespace Lab2Expense.ViewModels
                 Id = user.Id,
                 Email = user.Email,
                 Username = user.Username,
-                UserRole = user.UserRole
+
             };
         }
     }

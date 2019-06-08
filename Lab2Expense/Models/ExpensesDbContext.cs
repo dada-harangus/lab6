@@ -26,5 +26,7 @@ namespace Lab2Expense.Models
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserRole> UserRole { get; set; }
+        public DbSet<UserUserRole> UserUserRole { get; set; }
     }
 }

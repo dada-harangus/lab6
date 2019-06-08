@@ -1,4 +1,5 @@
 ﻿using Lab2Expense.Models;
+using Lab2Expense.Validators;
 using Lab2Expense.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -11,19 +12,19 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
-using System.Threading.Tasks;
 
 namespace Lab2Expense.Services
 {
     public interface IUsersService
     {
         UserGetModel Authenticate(string username, string password);
-        UserGetModel Register(RegisterPostModel registerInfo);
+        ErrorsCollection Register(RegisterPostModel registerInfo);
         User GetCurrentUser(HttpContext httpContext);
         IEnumerable<UserGetModelWithRole> GetAll();
         User Delete(int id);
         User Upsert(int id, User user, User userCurrent);
+        UserGetModelWithRole ChangeRole(int id, string Role, User currentUser);
+        IEnumerable<UserUserRoleGetModel> GetHistoryRoles(int id);
 
 
     }
@@ -32,11 +33,14 @@ namespace Lab2Expense.Services
     {
         private ExpensesDbContext context;
         private readonly AppSettings appSettings;
-
-        public UsersService(ExpensesDbContext context, IOptions<AppSettings> appSettings)
+        private IRegisterValidator registerValidator;
+        public UsersService(ExpensesDbContext context, IRegisterValidator registerValidator, IOptions<AppSettings> appSettings)
         {
             this.context = context;
             this.appSettings = appSettings.Value;
+            this.registerValidator = registerValidator;
+
+
         }
 
         public UserGetModel Authenticate(string username, string password)
@@ -57,7 +61,7 @@ namespace Lab2Expense.Services
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.Username.ToString()),
-                    new Claim(ClaimTypes.Role, user.UserRole.ToString())
+            //        new Claim(ClaimTypes.Role, user.UserRole.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -94,38 +98,84 @@ namespace Lab2Expense.Services
             }
         }
 
-        public UserGetModel Register(RegisterPostModel registerInfo)
+
+
+        public IEnumerable<UserUserRoleGetModel> GetHistoryRoles(int id)
         {
-            User existing = context.Users.FirstOrDefault(u => u.Username == registerInfo.Username);
-            if (existing != null)
+
+            //var user = context.Users.FirstOrDefault(user1 => user1.Id == id);
+
+            var result = context.UserUserRole.Select(userUserRole => new UserUserRoleGetModel
             {
-                return null;
+                User = userUserRole.User,
+                UserRole = userUserRole.UserRole,
+                StartTime = userUserRole.StartTime,
+                EndTime = userUserRole.EndTime,
+
+            }).Where(u => u.User.Id == id).OrderBy(us => us.StartTime).ToList();
+
+            return result;
+
+
+
+
+
+        }
+
+
+
+        public ErrorsCollection Register(RegisterPostModel registerInfo)
+        {
+            var errors = registerValidator.Validate(registerInfo, context);
+            if (errors != null)
+            {
+                return errors;
             }
 
-            context.Users.Add(new User
+            User toAdd = new User
             {
                 Email = registerInfo.Email,
                 LastName = registerInfo.LastName,
                 FirstName = registerInfo.FirstName,
                 Password = ComputeSha256Hash(registerInfo.Password),
                 Username = registerInfo.Username,
-                UserRole = UserRole.Regular,
-                isRemoved = false,
-                DateAdded = DateTime.Now
+                UserUserRoles = new List<UserUserRole>()
+            };
 
+            var regularRole = context
+                .UserRole
+                .FirstOrDefault(ur => ur.Name == "Regular");
 
+            context.Users.Add(toAdd);
+            context.UserUserRole.Add(new UserUserRole
+            {
+                User = toAdd,
+                UserRole = regularRole,
+                StartTime = DateTime.Now,
+                EndTime = null,
             });
+
             context.SaveChanges();
-            return Authenticate(registerInfo.Username, registerInfo.Password);
+            return null;
         }
 
+        public UserRole GetCurrentUserRole(User user)
+        {
+            return user
+                .UserUserRoles
+                .FirstOrDefault(userUserRole => userUserRole.EndTime == null)
+                .UserRole;
+        }
 
         public User GetCurrentUser(HttpContext httpContext)
         {
             string username = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
             //string accountType = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.AuthenticationMethod).Value;
             //return _context.Users.FirstOrDefault(u => u.Username == username && u.AccountType.ToString() == accountType);
-            return context.Users.FirstOrDefault(u => u.Username == username);
+            return context
+                .Users
+                .Include(u => u.UserUserRoles)
+                .FirstOrDefault(u => u.Username == username);
         }
 
         public IEnumerable<UserGetModelWithRole> GetAll()
@@ -136,24 +186,40 @@ namespace Lab2Expense.Services
                 Id = user.Id,
                 Email = user.Email,
                 Username = user.Username,
-                UserRole= user.UserRole
+
             });
         }
-        //public UserGetModelWithRole ChangeRole(int id, string Role)
-        //{
-        //    var user = context.Users.Find(id);
-        //    if (Role == "admin")
-        //    {
-        //        user.UserRole = Models.UserRole.Admin;
-        //    }
-        //    if (Role == "manager")
-        //    {
-        //        user.UserRole = Models.UserRole.UserManager;
-        //    }
+        public UserGetModelWithRole ChangeRole(int id, string Role, User userCurrent)
+        {
+            DateTime dateCurrent = DateTime.Now;
+            TimeSpan diferenta = dateCurrent.Subtract(userCurrent.DateAdded);
+            var userCurentRole = GetCurrentUserRole(userCurrent);
+            var user = context.Users.FirstOrDefault(U => U.Id == id);
+            var userRoleFromTheUserToChange = GetCurrentUserRole(user);
+            if ((userCurentRole.Name == "Admin" || diferenta.Days > 190) && userRoleFromTheUserToChange.Name != "Admin")
+            {
 
-        //    return UserGetModelWithRole.FromUser(user);
+                var userActiveRole = user.UserUserRoles.FirstOrDefault(role => role.EndTime == null);
+                userActiveRole.EndTime = DateTime.Now;
+                var regularRole = context
+                   .UserRole
+                   .FirstOrDefault(ur => ur.Name == Role);
+                if (regularRole != null)
+                {
+                    context.UserUserRole.Add(new UserUserRole
+                    {
+                        User = user,
+                        UserRole = regularRole,
+                        StartTime = DateTime.Now,
+                        EndTime = null,
+                    });
 
-        //}
+                }
+            }
+
+            return UserGetModelWithRole.FromUser(user);
+
+        }
         public User Delete(int id)
         {
             var existing = context.Users
@@ -182,13 +248,21 @@ namespace Lab2Expense.Services
             TimeSpan diferenta = dateCurrent.Subtract(userCurrent.DateAdded);
 
             user.Id = id;
-            if ((userCurrent.UserRole == Models.UserRole.Admin || diferenta.Days > 190 ) && existing.UserRole !=Models.UserRole.Admin)
+            var userCurentRole = GetCurrentUserRole(userCurrent);
+            var curentRoleForExisting = GetCurrentUserRole(existing);
+            if ((userCurentRole.Name == "Admin" || diferenta.Days > 190) && curentRoleForExisting.Name != "Admin")
             {
+                var getUserRole = GetCurrentUserRole(user);
+                ChangeRole(user.Id, getUserRole.Name, existing);
                 context.Users.Update(user);
+
                 context.SaveChanges();
                 return user;
             }
-            user.UserRole = existing.UserRole;
+            var getUserRoleNotChangeRole = GetCurrentUserRole(user);
+            var getExistingRole = GetCurrentUserRole(existing);
+            ChangeRole(user.Id, getExistingRole.Name, existing);
+
             context.Users.Update(user);
             context.SaveChanges();
             return user;

@@ -43,12 +43,12 @@ namespace Lab2Expense.Controllers
         //[HttpPost]
         public IActionResult Register([FromBody]RegisterPostModel registerModel)
         {
-            var user = _userService.Register(registerModel);
-            if (user == null)
+            var errors = _userService.Register(registerModel);//, out User user);
+            if (errors != null)
             {
-                return BadRequest(new { ErrorMessage = "Username already exists." });
+                return BadRequest(errors);
             }
-            return Ok(user);
+            return Ok();//user);
         }
         [AllowAnonymous]
         [HttpGet]
@@ -107,25 +107,39 @@ namespace Lab2Expense.Controllers
 
             return Ok(existing);
         }
-        //[HttpPut]
-        //[HttpPost]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-        //public IActionResult ChangeRole([FromQuery]int id, [FromBody] string Role)
-        //{
-        //    if (User.IsInRole("UserManager"))
-        //    {
-        //        return NoContent();
-        //    }
-        //    var existing = _userService.ChangeRole(id, Role);
-        //    if (existing == null)
-        //    {
-        //        return NotFound();
-        //    }
+        [HttpPut]
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult ChangeRole([FromQuery]int id, [FromBody] string Role)
+        {
+            //if (User.IsInRole("UserManager"))
+            //{
+            //    return NoContent();
+            //}
+            var userCurrent = _userService.GetCurrentUser(HttpContext);
+            var existing = _userService.ChangeRole(id, Role, userCurrent);
+            if (existing == null)
+            {
+                return NotFound();
+            }
 
-        //    return Ok(existing);
+            return Ok(existing);
 
-        //}
+        }
+
+        [HttpGet("{id}", Name = "GetHistoryRoles")]
+        public IActionResult GetHistoryRoles(int id)
+        {
+            var found = _userService.GetHistoryRoles(id);
+
+            if (found == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(found);
+        }
 
     }
 }

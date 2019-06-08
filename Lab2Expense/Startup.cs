@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Lab2Expense.Models;
 using Lab2Expense.Services;
+using Lab2Expense.Validators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -97,6 +98,8 @@ namespace Lab2Expense
             services.AddScoped<IExpenseService, ExpenseService>();
             services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<IUsersService, UsersService>();
+            services.AddScoped<IRegisterValidator, RegisterValidator>();
+            services.AddScoped<IUserRoleService, UserRoleService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
