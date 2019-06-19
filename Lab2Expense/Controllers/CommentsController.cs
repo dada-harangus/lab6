@@ -79,12 +79,12 @@ namespace Lab2Expense.Controllers
         /// <param name="id">the id of the comment we want to update</param>
         /// <param name="comment">a comment that contains the new data</param>
         /// <returns>a comment object</returns>
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] Comment comment)
-        {
-            var result = commentService.Upsert(id, comment);
-            return Ok(result);
-        }
+        //[HttpPut("{id}")]
+        //public IActionResult Put(int id, [FromBody] Comment comment)
+        //{
+        //    var result = commentService.Upsert(id, comment);
+        //    return Ok(result);
+        //}
 
         // DELETE: api/ApiWithActions/5
         /// <summary>
@@ -92,16 +92,16 @@ namespace Lab2Expense.Controllers
         /// </summary>
         /// <param name="id">The id of the comment we want to delete</param>
         /// <returns>a comment object</returns>
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
-        {
-            var existing = commentService.Delete(id);
-            if (existing == null)
-            {
-                return NotFound();
-            }
+        //[HttpDelete("{id}")]
+        //public IActionResult Delete(int id)
+        //{
+        //    var existing = commentService.Delete(id);
+        //    if (existing == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return Ok(existing);
-        }
+        //    return Ok(existing);
+        //}
     }
 }

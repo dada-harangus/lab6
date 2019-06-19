@@ -161,10 +161,9 @@ namespace Lab2Expense.Services
 
         public UserRole GetCurrentUserRole(User user)
         {
-            return user
-                .UserUserRoles
-                .FirstOrDefault(userUserRole => userUserRole.EndTime == null)
-                .UserRole;
+            var userRoleId = context.UserUserRole.FirstOrDefault(userUserRole => userUserRole.UserId == user.Id && userUserRole.EndTime == null);
+            var userActiveRole = context.UserRole.FirstOrDefault(userRole => userRole.Id == userRoleId.UserRoleId);
+            return userActiveRole;
         }
 
         public User GetCurrentUser(HttpContext httpContext)
@@ -199,8 +198,8 @@ namespace Lab2Expense.Services
             if ((userCurentRole.Name == "Admin" || diferenta.Days > 190) && userRoleFromTheUserToChange.Name != "Admin")
             {
 
-                var userActiveRole = user.UserUserRoles.FirstOrDefault(role => role.EndTime == null);
-                userActiveRole.EndTime = DateTime.Now;
+                var userRoleId = context.UserUserRole.FirstOrDefault(userUserRole => userUserRole.UserId == user.Id && userUserRole.EndTime == null);
+                userRoleId.EndTime = DateTime.Now;
                 var regularRole = context
                    .UserRole
                    .FirstOrDefault(ur => ur.Name == Role);
@@ -217,6 +216,7 @@ namespace Lab2Expense.Services
                 }
             }
 
+            context.SaveChanges();
             return UserGetModelWithRole.FromUser(user);
 
         }

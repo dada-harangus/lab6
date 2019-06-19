@@ -42,9 +42,12 @@ namespace TestUsersService
                     },
 
                 }, null);
-
+                var DateStart=new DateTime(2019,05, 05, 12, 30,00);
+                var DateEnd = new DateTime(2019, 07, 05, 12, 30, 00);
+                var ExpenseTypeFood = ExpenseType.food;
                 var allComments = expenseService.GetAll(1);
-                Assert.NotNull(allComments);
+                var allCommentsDateType = expenseService.GetAll(1, DateStart,DateEnd, ExpenseTypeFood);
+                Assert.NotNull(allCommentsDateType);
             }
         }
 
@@ -121,7 +124,9 @@ namespace TestUsersService
                 }, null);
 
                 var expenseDeleted = expenseService.Delete(addedExpense.Id);
+                var expenseDeletedNull = expenseService.Delete(23);
                 Assert.IsNotNull(expenseDeleted);
+                Assert.IsNull(expenseDeletedNull);
             }
         }
 
@@ -183,7 +188,8 @@ namespace TestUsersService
 
 
                 var updateResult = expenseService.Upsert(addedExpense.Id, addedExpenseForUpdate);
-                
+                var updateResultNull = expenseService.Upsert(2, addedExpenseForUpdate);
+                Assert.IsNull(updateResultNull);
 
             }
         }

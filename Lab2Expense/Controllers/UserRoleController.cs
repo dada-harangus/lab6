@@ -72,13 +72,15 @@ namespace Lab2Expense.Controllers
         /// }
         /// </remarks>
         /// <param name="expense">The userRole that we want to add</param>
+        [AllowAnonymous]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+
         public void Post([FromBody] UserRolePostModel userRolePostModel)
         {
             User addedBy = usersService.GetCurrentUser(HttpContext);
-            userRoleService.Create(userRolePostModel,addedBy);
+            userRoleService.Create(userRolePostModel);
         }
 
         // PUT: api/UserRole/5

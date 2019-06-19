@@ -11,6 +11,6 @@ namespace Lab2Expense.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public IEnumerable<UserUserRole> UserUserRoles { get; set; }
-        public User Owner { get; set; }
+       
     }
 }

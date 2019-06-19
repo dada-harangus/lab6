@@ -7,12 +7,14 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace Lab2Expense.Services
-{public interface ICommentService {
+{
+    public interface ICommentService
+    {
 
         IEnumerable<CommentGetModel> GetAll(string filter);
         Comment GetById(int id);
-       // Comment Create(CommentPostModel expense);
-        Comment Upsert(int id, Comment expense);
+        Comment Create(CommentPostModel expense, int id);
+        //  Comment Upsert(int id, Comment expense);
         Comment Delete(int id);
     }
     public class CommentService : ICommentService
@@ -23,15 +25,16 @@ namespace Lab2Expense.Services
             this.context = context;
         }
 
-        //public Comment Create(CommentPostModel comment)
-        //{
-        //    Comment toAdd = CommentPostModel.ToComment(comment);
-        //    context.Comments.Add(toAdd);
-        //    context.SaveChanges();
-        //    return toAdd;
+        public Comment Create(CommentPostModel comment, int id)
+        {
+            Comment toAdd = CommentPostModel.ToComment(comment);
+            Expense expense = context.Expenses.FirstOrDefault(exp => exp.Id == id);
+            expense.Comments.Add(toAdd);
+            context.SaveChanges();
+            return toAdd;
 
 
-        //}
+        }
 
         public Comment Delete(int id)
         {
@@ -45,64 +48,29 @@ namespace Lab2Expense.Services
             return existing;
         }
 
-        public IEnumerable<CommentGetModel> GetAll(string filter)
+        public IEnumerable<CommentGetModel> GetAll(string text)
         {
-            //IQueryable<Comment> result = context.Comments;
-            ////.Include(f => f.Comments);
-            //if (filter != null)
-            //{
-            //    result = result.Where(f => f.Text.Contains(filter));
-            //}
-            //return result.Select(f => CommentGetModel.FromComment(f)); ;
-            List<CommentGetModel> list=new List<CommentGetModel>();
-            List<CommentGetModel> list2=new List<CommentGetModel>();
-            IQueryable<Expense> result = context.Expenses.Include(f => f.Comments);
-            //result = result
-            //    .Where(e => e.Comments
-            //    .Any(c => c.Text.Contains(filter)));
-            if (filter == null) {
-                foreach (Expense e in result)
-                {
-                    var temp = e.Comments;
-                    foreach (Comment c in temp)
-                    {                     
-                        {  var m = new CommentGetModel
-                            {
-                                ExpenseId = e.Id,
-                                Id = c.Id,
-                                Text = c.Text,
-                                Important = c.Important
-                            };
-                            list2.Add(m);
-                        }
-                    }
+            IQueryable<CommentGetModel> result = context.Comments.Select(x => new CommentGetModel
 
-                }
+            {
 
-                return list2;
+
+
+                Id = x.Id,
+                Text = x.Text,
+                Important = x.Important,
+                ExpenseId = (from movies in context.Expenses
+                             where movies.Comments.Contains(x)
+                             select movies.Id).FirstOrDefault()
+            });
+            //var result = context.Comments.Select(x 
+
+            if (text != null)
+            {
+                result = result.Where(comment => comment.Text.Contains(text));
             }
-            foreach (Expense e in result)
-            {   
-               var temp = e.Comments;
-                foreach (Comment c in temp)
-                {
-                    if (c.Text.Contains(filter)&&filter!=null)
-                    {
-                        var m = new CommentGetModel
-                        {
-                            ExpenseId = e.Id,
-                            Id = c.Id,
-                            Text = c.Text,
-                            Important = c.Important
-                        };
-                        list.Add(m);
-                    }
-                }
-                
-            }
-       
-            return list;
-            
+
+            return result;
         }
 
         public Comment GetById(int id)
@@ -112,19 +80,19 @@ namespace Lab2Expense.Services
                 .FirstOrDefault(e => e.Id == id);
         }
 
-        public Comment Upsert(int id, Comment expense)
-        {
-            var existing = context.Comments.AsNoTracking().FirstOrDefault(f => f.Id == id);
-            if (existing == null)
-            {
-                context.Comments.Add(expense);
-                context.SaveChanges();
-                return expense;
-            }
-            expense.Id = id;
-            context.Comments.Update(expense);
-            context.SaveChanges();
-            return expense;
-        }
+        //public comment upsert(int id, comment expense)
+        //{
+        //    var existing = context.comments.asnotracking().firstordefault(f => f.id == id);
+        //    if (existing == null)
+        //    {
+        //        context.comments.add(expense);
+        //        context.savechanges();
+        //        return expense;
+        //    }
+        //    expense.id = id;
+        //    context.comments.update(expense);
+        //    context.savechanges();
+        //    return expense;
+        //}
     }
 }

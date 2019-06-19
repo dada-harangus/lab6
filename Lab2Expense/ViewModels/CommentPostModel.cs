@@ -13,15 +13,15 @@ namespace Lab2Expense.ViewModels
         public bool Important { get; set; }
         public int ExpenseId { get; set; }
 
-        //public static Comment ToComment(CommentPostModel comment)
-        //{
-        //    return new Comment
-        //    {
-        //        Text = comment.Text,
-        //        Important = comment.Important,
-        //        ExpenseId = comment.ExpenseId,
+        public static Comment ToComment(CommentPostModel comment)
+        {
+            return new Comment
+            {
+                Text = comment.Text,
+                Important = comment.Important,
+                
 
-        //    };
-        //}
+            };
+        }
     }
 }

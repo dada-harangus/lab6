@@ -11,7 +11,7 @@ namespace Lab2Expense.Services
     public interface IUserRoleService
     {
         IEnumerable<UserRoleGetModel> GetAll();
-        UserRole Create(UserRolePostModel userRolePostModel, User currentUser);
+        UserRole Create(UserRolePostModel userRolePostModel);
         UserRole Upsert(int id, UserRole userRole);
         UserRole Delete(int id);
 
@@ -25,11 +25,11 @@ namespace Lab2Expense.Services
         }
 
 
-        public UserRole Create(UserRolePostModel userPostModel, User currentUser)
+        public UserRole Create(UserRolePostModel userPostModel)
         {
             UserRole toAdd = UserRolePostModel.ToUserRole(userPostModel);
 
-            toAdd.Owner = currentUser;
+            
             context.UserRole.Add(toAdd);
             context.SaveChanges();
             return toAdd;

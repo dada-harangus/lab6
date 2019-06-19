@@ -107,18 +107,20 @@ namespace Lab2Expense.Controllers
 
             return Ok(existing);
         }
+
+        [AllowAnonymous]
         [HttpPut]
-        [HttpPost]
+
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult ChangeRole([FromQuery]int id, [FromBody] string Role)
+        public IActionResult ChangeRole( [FromBody] Role Role)
         {
             //if (User.IsInRole("UserManager"))
             //{
             //    return NoContent();
             //}
             var userCurrent = _userService.GetCurrentUser(HttpContext);
-            var existing = _userService.ChangeRole(id, Role, userCurrent);
+            var existing = _userService.ChangeRole(Role.idUser, Role.RoleType, userCurrent);
             if (existing == null)
             {
                 return NotFound();
@@ -127,7 +129,7 @@ namespace Lab2Expense.Controllers
             return Ok(existing);
 
         }
-
+        [AllowAnonymous]
         [HttpGet("{id}", Name = "GetHistoryRoles")]
         public IActionResult GetHistoryRoles(int id)
         {
