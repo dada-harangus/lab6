@@ -13,7 +13,7 @@ namespace Lab2Expense.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin,Regular")]
+   // [Authorize(Roles = "Admin,Regular")]
     public class UserRoleController : ControllerBase
     {
         private IUserRoleService userRoleService;
@@ -28,7 +28,7 @@ namespace Lab2Expense.Controllers
         /// Get all the userRoles
         /// </summary>
 
-        /// <returns>A list of Expense objects</returns>
+        /// <returns>A list of userRole objects</returns>
         [AllowAnonymous]
         [HttpGet]
         public IEnumerable<UserRoleGetModel> Get()
@@ -38,12 +38,12 @@ namespace Lab2Expense.Controllers
 
         }
 
-        //GET: api/Expenses/5
+        //GET: api/UserRole/5
         /// <summary>
-        /// Get the Expense that has the id requested
+        /// Get the userRole that has the id requested
         /// </summary>
-        /// <param name = "id" > The id of the Expense</param>
-        /// <returns>The expense with the given Id</returns>
+        /// <param name = "id" > The id of the userRole</param>
+        /// <returns>The userRole with the given Id</returns>
 
         //    [HttpGet("{id}", Name = "GetExpense")]
         //public IActionResult Get(int id)
@@ -71,7 +71,7 @@ namespace Lab2Expense.Controllers
         ///   
         /// }
         /// </remarks>
-        /// <param name="expense">The userRole that we want to add</param>
+        /// <param name="userRolePostModel">The userRole that we want to add</param>
         [AllowAnonymous]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -102,7 +102,7 @@ namespace Lab2Expense.Controllers
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult Put(int id, [FromBody] UserRole userRole)
+        public IActionResult Put(int id, [FromBody] UserRolePostModel userRole)
         {
             var result = userRoleService.Upsert(id, userRole);
             return Ok(result);

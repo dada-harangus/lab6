@@ -64,20 +64,20 @@ namespace Lab2Expense.Controllers
         /// }
         /// </remarks>
         /// <param name="comment">the comment that we want to add</param>
-        //[HttpPost]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-        //public void Post([FromBody] CommentPostModel comment)
-        //{
-        //    commentService.Create(comment);
-        //}
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public void Post([FromQuery] int id, [FromBody] CommentPostModel comment)
+        {
+            commentService.Create(comment, id);
+        }
 
-        // PUT: api/Comments/5
+        //PUT: api/Comments/5
         /// <summary>
         /// update the comment with the specified id
         /// </summary>
-        /// <param name="id">the id of the comment we want to update</param>
-        /// <param name="comment">a comment that contains the new data</param>
+        /// <param name = "id" > the id of the comment we want to update</param>
+        /// <param name = "comment" > a comment that contains the new data</param>
         /// <returns>a comment object</returns>
         //[HttpPut("{id}")]
         //public IActionResult Put(int id, [FromBody] Comment comment)
@@ -90,18 +90,19 @@ namespace Lab2Expense.Controllers
         /// <summary>
         /// Delete the comment with the specified id
         /// </summary>
-        /// <param name="id">The id of the comment we want to delete</param>
+        /// <param name = "id" > The id of the comment we want to delete</param>
         /// <returns>a comment object</returns>
-        //[HttpDelete("{id}")]
-        //public IActionResult Delete(int id)
-        //{
-        //    var existing = commentService.Delete(id);
-        //    if (existing == null)
-        //    {
-        //        return NotFound();
-        //    }
 
-        //    return Ok(existing);
-        //}
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var existing = commentService.Delete(id);
+            if (existing == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(existing);
+        }
     }
 }

@@ -107,7 +107,11 @@ namespace Lab2Expense.Controllers
 
             return Ok(existing);
         }
-
+        /// <summary>
+        /// Changes a user role 
+        /// </summary>
+        /// <param name="Role">which user and in what role you want to change the current role </param>
+        /// <returns>the new user role </returns>
         [AllowAnonymous]
         [HttpPut]
 
@@ -129,6 +133,11 @@ namespace Lab2Expense.Controllers
             return Ok(existing);
 
         }
+        /// <summary>
+        /// Gets the history role for a user
+        /// </summary>
+        /// <param name="id">which user </param>
+        /// <returns></returns>
         [AllowAnonymous]
         [HttpGet("{id}", Name = "GetHistoryRoles")]
         public IActionResult GetHistoryRoles(int id)

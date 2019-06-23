@@ -12,7 +12,7 @@ namespace Lab2Expense.Services
     {
         IEnumerable<UserRoleGetModel> GetAll();
         UserRole Create(UserRolePostModel userRolePostModel);
-        UserRole Upsert(int id, UserRole userRole);
+        UserRole Upsert(int id, UserRolePostModel userRole);
         UserRole Delete(int id);
 
     }
@@ -69,20 +69,22 @@ namespace Lab2Expense.Services
 
 
 
-        public UserRole Upsert(int id, UserRole userRole)
+        public UserRole Upsert(int id, UserRolePostModel userRole)
         {
+            UserRole toAdd = UserRolePostModel.ToUserRole(userRole);
             var existing = context.UserRole.AsNoTracking().FirstOrDefault(f => f.Id == id);
             if (existing == null)
             {
+                
                 context.
-                    UserRole.Add(userRole);
+                    UserRole.Add(toAdd);
                 context.SaveChanges();
-                return userRole;
+                return toAdd;
             }
-            userRole.Id = id;
-            context.UserRole.Update(userRole);
+            toAdd.Id = id;
+            context.UserRole.Update(toAdd);
             context.SaveChanges();
-            return userRole;
+            return toAdd;
         }
     }
 }

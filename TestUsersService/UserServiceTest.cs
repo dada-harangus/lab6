@@ -2,9 +2,11 @@ using Lab2Expense.Models;
 using Lab2Expense.Services;
 using Lab2Expense.Validators;
 using Lab2Expense.ViewModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -136,8 +138,10 @@ namespace Tests
 
             using (var context = new ExpensesDbContext(options))
             {
+
                 var validator = new RegisterValidator();
                 var usersService = new UsersService(context, validator, config);
+
                 var added = new Lab2Expense.ViewModels.RegisterPostModel
                 {
                     Email = "a@a.b",
@@ -176,6 +180,16 @@ namespace Tests
                     Password = "1234567",
                     Username = "test_username"
                 };
+
+                var userRoleService = new UserRoleService(context);
+                var addedRole = new Lab2Expense.ViewModels.UserRolePostModel
+                {
+                    Name = "Regular",
+                    Description = "jskds"
+
+                };
+                var result = userRoleService.Create(addedRole);
+
                 var resultAdded = usersService.Register(added);
                 var resultAuthentificate = usersService.Authenticate(added.Username, added.Password);
 
@@ -208,12 +222,112 @@ namespace Tests
                 var resultAdded = usersService.Register(added);
                 var resultAuthentificate = usersService.Authenticate(added.Username, added.Password);
 
-                
+
 
                 var userRole = usersService.GetHistoryRoles(resultAuthentificate.Id);
                 Assert.IsNotNull(userRole);
             }
         }
 
+        [Test]
+        public void ValidUpsert()
+        {
+            var options = new DbContextOptionsBuilder<ExpensesDbContext>()
+              .UseInMemoryDatabase(databaseName: nameof(ValidUpsert))// "ValidRegisterShouldCreateANewUser")
+              .Options;
+
+            using (var context = new ExpensesDbContext(options))
+            {
+                var validator = new RegisterValidator();
+                var usersService = new UsersService(context, validator, config);
+                var userRoleService = new UserRoleService(context);
+                var addedRole = new UserRolePostModel
+                {
+                    Name = "Admin",
+                    Description = "jskds"
+
+                };
+                var result = userRoleService.Create(addedRole);
+
+                var addedRole2 = new UserRolePostModel
+                {
+                    Name = "Regular",
+                    Description = "jskds"
+
+                };
+                var resultRegular = userRoleService.Create(addedRole2);
+
+
+                var added = new Lab2Expense.Models.User
+                {
+                    Email = "a@a.b",
+                    FirstName = "fdsfsdfs",
+                    LastName = "fdsfs",
+                    Password = "1234567",
+                    Username = "test_username",
+                    UserUserRoles = new List<UserUserRole>()
+                };
+
+                var adminRole = context
+               .UserRole
+               .FirstOrDefault(ur => ur.Name == "Admin");
+
+                context.Users.Add(added);
+                context.UserUserRole.Add(new UserUserRole
+                {
+                    User = added,
+                    UserRole = adminRole,
+                    StartTime = DateTime.Now,
+                    EndTime = null,
+                });
+                var addedRegular = new Lab2Expense.Models.User
+                {
+                    Email = "a@a.b",
+                    FirstName = "fdsfsdfs",
+                    LastName = "fdsfs",
+                    Password = "1234567",
+                    Username = "test_username",
+                    UserUserRoles = new List<UserUserRole>()
+                };
+
+                var RegularRole = context
+               .UserRole
+               .FirstOrDefault(ur => ur.Name == "Regular");
+
+                context.Users.Add(addedRegular);
+                context.UserUserRole.Add(new UserUserRole
+                {
+                    User = addedRegular,
+                    UserRole = RegularRole,
+                    StartTime = DateTime.Now,
+                    EndTime = null,
+                });
+                context.SaveChanges();
+                context.Entry(added).State = EntityState.Detached;
+                context.Entry(adminRole).State = EntityState.Detached;
+                context.Entry(addedRegular).State = EntityState.Detached;
+                var addedRegular2 = new Lab2Expense.Models.User
+                {
+                    Email = "dada@yahoo.com",
+                    FirstName = "fdsfsdfs",
+                    LastName = "fdsfs",
+                    Password = "1234567",
+                    Username = "test_username",
+                    UserUserRoles = new List<UserUserRole>()
+                };
+                context.Entry(addedRegular2).State = EntityState.Detached;
+                //   var resultAdded = usersService.Register(added);
+                //  var resultAuthentificate = usersService.Authenticate(added.Username, added.Password);
+
+
+
+
+                var resultUpdate = usersService.Upsert(addedRegular.Id, addedRegular2, added);
+              Assert.AreEqual("dada@yahoo.com", addedRegular.Email);
+
+
+
+            }
+        }
     }
 }

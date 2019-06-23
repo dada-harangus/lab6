@@ -98,6 +98,7 @@ namespace Lab2Expense.Services
             var existing = context.Expenses.AsNoTracking().FirstOrDefault(f => f.Id == id);
             if (existing == null)
             {
+                expense.Id = 0;
                 context.
                     Expenses.Add(expense);
                 context.SaveChanges();

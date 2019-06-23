@@ -239,6 +239,7 @@ namespace Lab2Expense.Services
             var existing = context.Users.AsNoTracking().FirstOrDefault(f => f.Id == id);
             if (existing == null)
             {
+                user.Id = 0;
                 context.
                     Users.Add(user);
                 context.SaveChanges();
@@ -251,8 +252,9 @@ namespace Lab2Expense.Services
             var userCurentRole = GetCurrentUserRole(userCurrent);
             var curentRoleForExisting = GetCurrentUserRole(existing);
             if ((userCurentRole.Name == "Admin" || diferenta.Days > 190) && curentRoleForExisting.Name != "Admin")
-            {
+            {   
                 var getUserRole = GetCurrentUserRole(user);
+
                 ChangeRole(user.Id, getUserRole.Name, existing);
                 context.Users.Update(user);
 

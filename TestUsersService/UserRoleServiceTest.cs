@@ -65,7 +65,7 @@ namespace TestUsersService
                 var result = userRoleService.Create(added);
                 var resultDelete = userRoleService.Delete(result.Id);
                 var resultNull = userRoleService.Delete(38743);
-                Assert.IsNotNull(result);
+                Assert.IsNotNull(resultDelete);
                 Assert.IsNull(resultNull);
 
 
@@ -96,7 +96,49 @@ namespace TestUsersService
             }
         }
 
+        [Test]
+        public void ValidUpsert1()
+        {
+            var options = new DbContextOptionsBuilder<ExpensesDbContext>()
+              .UseInMemoryDatabase(databaseName: nameof(ValidUpsert1))// "ValidRegisterShouldCreateANewUser")
+              .Options;
+
+            using (var context = new ExpensesDbContext(options))
+            {
+                UserRoleService userRoleService = new UserRoleService(context);
+                var added = new Lab2Expense.ViewModels.UserRolePostModel
+                {
+                    Name = "Regular",
+                    Description = "jskds"
+
+                };
+
+                var addedForUpdate = new Lab2Expense.ViewModels.UserRolePostModel
+                {
+                    Name = "Admin",
+                    Description = "smands"
+                };
+                var addedForUpdate2 = new Lab2Expense.Models.UserRole
+                {
+                    Name = "UserManager",
+                    Description = "smands"
+                };
+
+                var result = userRoleService.Create(added);
+                context.Entry(result).State = EntityState.Detached;
+                added.Name = "Admin";
+
+                var resultUpsert = userRoleService.Upsert(result.Id, added);
+                     var resultNull = userRoleService.Upsert(8, added);
+                     Assert.AreEqual("Admin", resultNull.Name);
+
+                Assert.AreEqual("Admin", resultUpsert.Name);
 
 
+            }
+
+
+
+        }
     }
 }
