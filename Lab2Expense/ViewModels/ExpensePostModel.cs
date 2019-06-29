@@ -19,7 +19,11 @@ namespace Lab2Expense.ViewModels
 
         public static Expense ToExpense(ExpensePostModel expense)
         {
-            ExpenseType expenseType = Models.ExpenseType.other;
+            ExpenseType expenseType = 0;
+            if (expense.ExpenseType == "other")
+            {
+                expenseType = Models.ExpenseType.other;
+            }
             if (expense.ExpenseType == "food")
             {
                 expenseType = Models.ExpenseType.food;

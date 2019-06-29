@@ -20,7 +20,7 @@ namespace Lab2Expense.Services
         UserGetModel Authenticate(string username, string password);
         ErrorsCollection Register(RegisterPostModel registerInfo);
         User GetCurrentUser(HttpContext httpContext);
-        IEnumerable<UserGetModelWithRole> GetAll();
+        IEnumerable<UserGetModel> GetAll();
         User Delete(int id);
         User Upsert(int id, User user, User userCurrent);
         UserGetModelWithRole ChangeRole(int id, string Role, User currentUser);
@@ -46,8 +46,10 @@ namespace Lab2Expense.Services
         public UserGetModel Authenticate(string username, string password)
         {
             var user = context.Users
-                .SingleOrDefault(x => x.Username == username &&
-                                 x.Password == ComputeSha256Hash(password));
+              .Include(u => u.UserUserRoles)
+              .ThenInclude(uur => uur.UserRole)
+              .SingleOrDefault(x => x.Username == username &&
+                               x.Password == ComputeSha256Hash(password));
 
             // return null if user not found
             if (user == null)
@@ -55,13 +57,13 @@ namespace Lab2Expense.Services
 
             // authentication successful so generate jwt token
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = System.Text.Encoding.ASCII.GetBytes(appSettings.Secret);
+            var key = Encoding.ASCII.GetBytes(appSettings.Secret);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.Username.ToString()),
-            //        new Claim(ClaimTypes.Role, user.UserRole.ToString())
+                    //new Claim(ClaimTypes.Role, user.UserRole.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -72,10 +74,10 @@ namespace Lab2Expense.Services
                 Id = user.Id,
                 Email = user.Email,
                 Username = user.Username,
-                Token = tokenHandler.WriteToken(token)
+                Token = tokenHandler.WriteToken(token),
+                UserRole = user.UserUserRoles.First().UserRole.Name
             };
             // remove password before returning
-
             return result;
         }
 
@@ -177,13 +179,18 @@ namespace Lab2Expense.Services
                 .FirstOrDefault(u => u.Username == username);
         }
 
-        public IEnumerable<UserGetModelWithRole> GetAll()
+        public IEnumerable<UserGetModel> GetAll()
         {
             // return users without passwords
-            return context.Users.Select(user => new UserGetModelWithRole
+            return context.Users.Select(user => new UserGetModel
             {
+
                 Id = user.Id,
-                Email = user.Email,
+                UserRole = (from userUserRole in context.UserUserRole
+                            where userUserRole.UserId == user.Id 
+                            && userUserRole.EndTime == null
+                            join userRole in context.UserRole on userUserRole.UserRoleId equals userRole.Id
+                            select userRole.Name).FirstOrDefault(),
                 Username = user.Username,
 
             });
@@ -252,7 +259,7 @@ namespace Lab2Expense.Services
             var userCurentRole = GetCurrentUserRole(userCurrent);
             var curentRoleForExisting = GetCurrentUserRole(existing);
             if ((userCurentRole.Name == "Admin" || diferenta.Days > 190) && curentRoleForExisting.Name != "Admin")
-            {   
+            {
                 var getUserRole = GetCurrentUserRole(user);
 
                 ChangeRole(user.Id, getUserRole.Name, existing);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Lab2Expense.Models;
@@ -12,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lab2Expense.Controllers
 {
-    [Authorize(Roles = "Admin,Regular")]
+ //   [Authorize(Roles = "Admin,Regular")]
     [Route("api/[controller]")]
     [ApiController]
     public class ExpensesController : ControllerBase
@@ -34,10 +35,57 @@ namespace Lab2Expense.Controllers
         /// <returns>A list of Expense objects</returns>
         [AllowAnonymous]
         [HttpGet]
-        public PaginatedList<ExpenseGetModel> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]ExpenseType? type, [FromQuery]int page = 1)
+        public IEnumerable<ExpenseGetModel> Get([FromQuery]string from, [FromQuery]string to, [FromQuery]string type, [FromQuery]int page = 1)
         {
+
+            DateTime dateFrom = new DateTime();
+            DateTime dateTo = new DateTime();
+            if (from != "undefined" && to != "undefined"&& from !=null && to!=null)
+            {
+                dateFrom = DateTime.ParseExact(from, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+                dateTo = DateTime.ParseExact(to, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+            }
+            ExpenseType expenseType = new ExpenseType();
+
+            if (type == "none")
+            {
+                expenseType = Models.ExpenseType.none;
+            }
+                if (type == "other")
+                {
+                    expenseType = Models.ExpenseType.other;
+                }
+                else if (type == "food")
+                {
+                    expenseType = Models.ExpenseType.food;
+                }
+                else if (type == "utilities")
+                {
+                    expenseType = Models.ExpenseType.utilities;
+                }
+                else if (type == "transportation")
+                {
+                    expenseType = Models.ExpenseType.transportation;
+                }
+                else if (type == "outing")
+                {
+                    expenseType = Models.ExpenseType.outing;
+                }
+                else if (type == "groceries")
+                {
+                    expenseType = Models.ExpenseType.groceries;
+                }
+                else if (type == "clothes")
+                {
+                    expenseType = Models.ExpenseType.clothes;
+                }
+                else if (type == "electronics")
+                {
+                    expenseType = Models.ExpenseType.electronics;
+                }
+            
             page = Math.Max(page, 1);
-            return expenseService.GetAll(page, from, to, type);
+            return expenseService.GetAll(page, dateFrom, dateTo,expenseType);
 
         }
 
@@ -84,7 +132,7 @@ namespace Lab2Expense.Controllers
         public void Post([FromBody] ExpensePostModel expense)
         {
             User addedBy = usersService.GetCurrentUser(HttpContext);
-            expenseService.Create(expense,addedBy);
+            expenseService.Create(expense, addedBy);
         }
 
         // PUT: api/Expenses/5

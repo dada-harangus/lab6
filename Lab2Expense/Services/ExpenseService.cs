@@ -10,7 +10,7 @@ namespace Lab2Expense.Services
 {
     public interface IExpenseService
     {
-        PaginatedList<ExpenseGetModel> GetAll(int page, DateTime? from = null, DateTime? to = null, ExpenseType? type = null);
+        IEnumerable<ExpenseGetModel> GetAll(int page, DateTime? from = null, DateTime? to = null, ExpenseType? type = null);
         Expense GetById(int id);
         Expense Create(ExpensePostModel expense, User addedBy);
         Expense Upsert(int id, Expense expense);
@@ -56,32 +56,33 @@ namespace Lab2Expense.Services
 
 
 
-        public PaginatedList<ExpenseGetModel> GetAll(int page, DateTime? from = null, DateTime? to = null, ExpenseType? type = null)
+        public IEnumerable<ExpenseGetModel> GetAll(int page, DateTime? from = null, DateTime? to = null, ExpenseType? type = null)
         {
-
+            DateTime dateTimeFrom = new DateTime();
+            DateTime dateTimeTo = new DateTime();
             IQueryable<Expense> result = context.Expenses.OrderBy(f => f.Id).Include(f => f.Comments);
-            PaginatedList<ExpenseGetModel> paginatedResult = new PaginatedList<ExpenseGetModel>();
-            paginatedResult.CurrentPage = page;
+            //      PaginatedList<ExpenseGetModel> paginatedResult = new PaginatedList<ExpenseGetModel>();
+            //      paginatedResult.CurrentPage = page;
 
-            if (from != null)
+            if (from != null && from != dateTimeFrom)
             {
                 result = result.Where(f => f.Date >= from);
             }
-            if (to != null)
+            if (to != null && to != dateTimeTo)
             {
                 result = result.Where(f => f.Date <= to);
             }
-            if (type != null)
+            if ( type!= ExpenseType.none)
             {
                 result = result.Where(f => f.ExpenseType == type);
             }
-            paginatedResult.NumberOfPages = (result.Count() - 1) / PaginatedList<ExpenseGetModel>.EntriesPerPage + 1;
-            result = result
-                .Skip((page - 1) * PaginatedList<ExpenseGetModel>.EntriesPerPage)
-                .Take(PaginatedList<ExpenseGetModel>.EntriesPerPage);
-            paginatedResult.Entries = result.Select(f => ExpenseGetModel.FromExpense(f)).ToList();
-
-            return paginatedResult;
+            //       paginatedResult.NumberOfPages = (result.Count() - 1) / PaginatedList<ExpenseGetModel>.EntriesPerPage + 1;
+            //       result = result
+            //          .Skip((page - 1) * PaginatedList<ExpenseGetModel>.EntriesPerPage)
+            //          .Take(PaginatedList<ExpenseGetModel>.EntriesPerPage);
+            //       paginatedResult.Entries = result.Select(f => ExpenseGetModel.FromExpense(f)).ToList();
+            IEnumerable<ExpenseGetModel> resultGetModel = result.Select(f => ExpenseGetModel.FromExpense(f)).ToList();
+            return resultGetModel;
         }
 
 

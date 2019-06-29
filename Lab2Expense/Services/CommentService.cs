@@ -65,7 +65,7 @@ namespace Lab2Expense.Services
             });
             //var result = context.Comments.Select(x 
 
-            if (text != null)
+            if (text != null )
             {
                 result = result.Where(comment => comment.Text.Contains(text));
             }

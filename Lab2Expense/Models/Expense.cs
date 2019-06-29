@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Lab2Expense.Models
 {
     public enum ExpenseType
-    { other, food, utilities, transportation, outing, groceries, clothes, electronics }
+    { none,other, food, utilities, transportation, outing, groceries, clothes, electronics }
 
 
     public class Expense

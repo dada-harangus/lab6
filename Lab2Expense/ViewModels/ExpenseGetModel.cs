@@ -16,12 +16,44 @@ namespace Lab2Expense.ViewModels
         public string Location { get; set; }
         public DateTime Date { get; set; }
         public string Currency { get; set; }
-        [EnumDataType(typeof(ExpenseType))]
-        public ExpenseType ExpenseType { get; set; }
+       public string ExpenseType { get; set; }
         public int NumberOfComments { get; set; }
 
         public static ExpenseGetModel FromExpense(Expense expense)
         {
+            string expenseType = "other";
+            if (expense.ExpenseType == Models.ExpenseType.food)
+            {
+                expenseType = "food";
+            }
+            else if (expense.ExpenseType == Models.ExpenseType.utilities)
+            {
+                expenseType = "utilities";
+            }
+            else if (expense.ExpenseType == Models.ExpenseType.transportation)
+            {
+                expenseType = "transportation";
+            }
+            else if (expense.ExpenseType == Models.ExpenseType.outing)
+            {
+                expenseType = "outing";
+            }
+            else if (expense.ExpenseType == Models.ExpenseType.groceries)
+            {
+                expenseType = "groceries";
+            }
+            else if (expense.ExpenseType == Models.ExpenseType.clothes)
+            {
+                expenseType = "clothes";
+            }
+            else if (expense.ExpenseType == Models.ExpenseType.electronics)
+            {
+                expenseType = "electronics";
+            }
+
+
+
+
             return new ExpenseGetModel
             {
                 Description = expense.Description,
@@ -29,7 +61,7 @@ namespace Lab2Expense.ViewModels
                 Location = expense.Location,
                 Date = expense.Date,
                 Currency = expense.Currency,
-                ExpenseType = expense.ExpenseType,
+                ExpenseType = expenseType,
                 NumberOfComments = expense.Comments.Count
             };
         }

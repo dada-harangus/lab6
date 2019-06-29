@@ -29,6 +29,10 @@ namespace Lab2Expense.Controllers
         [HttpGet]
         public IEnumerable<CommentGetModel> Get([FromQuery]string filter)
         {
+            if (filter =="undefined")
+            {
+                filter = null;
+            }
             return commentService.GetAll(filter);
         }
 
